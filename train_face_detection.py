@@ -13,12 +13,13 @@ import models
 # %%
 config = {
     'backbone': 'resnet50', #allowed 'resnet50' or 'mobilenetV2'
-    'N': 40, # rozmiar zbioru danych
-    'validation_part': 0.2, # rozmiar zbioru walidacyjnego (testowego)
-    'num_epochs': 200, # liczba epok
+    'validation_part': 0.2, # size of validation dataset
+    'num_epochs': 200,
     'train_backbone': False,
     'batch_size': 8,
-    'device': None
+    'device': None,
+    'COCO_dataset': 'path to train2017 directory from COCO dataset',
+    'COCO_annotations': 'path to instances_train2017.json file from COCO dataset' 
     }
 
 
@@ -75,17 +76,17 @@ class TrainingFaceDataset(torch.utils.data.Dataset):
         return len(self.face_index)
 
 # %%
-coco_dataset = torchvision.datasets.CocoDetection(r'D:\datasets\COCO\train2017',
-                                                  r'D:\datasets\COCO\annotations_trainval2017\annotations\instances_train2017.json')
+coco_dataset = torchvision.datasets.CocoDetection(config['COCO_dataset'],
+                                                  config['COCO_annotations'])
 
 face_dataset = TrainingFaceDataset(coco_dataset,
-                                   r'D:\cwiczenia\object_detection\data\faces_10001.txt')
+                                   'data/faces_10001.txt')
 
 # img, labels = face_dataset[0]
 
 
 # %%
-N_train = int(config['N'] * (1 - config['validation_part']) )
+N_train = int(len(face_dataset) * (1 - config['validation_part']) )
 
 dataset_train = torch.utils.data.Subset(face_dataset,
                                         list(range(N_train))
@@ -114,7 +115,7 @@ data_loader_test = torch.utils.data.DataLoader(
 #%%
 
 if config['device'] is None:
-    device = 'cpu' #torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 else:
     device = config['device']
 
